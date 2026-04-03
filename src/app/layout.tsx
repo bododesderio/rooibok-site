@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Geist } from "next/font/google";
+import { Geist } from "next/font/google";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import "@/styles/globals.css";
 import { cn } from "@/lib/utils";

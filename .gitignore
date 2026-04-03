@@ -37,3 +37,8 @@ next-env.d.ts
 
 # uploads
 /public/uploads/
+
+# database backups
+*.tar.gz
+*.sql.gz
+*.dump

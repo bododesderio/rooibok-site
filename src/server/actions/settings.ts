@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { requireAdmin } from "@/lib/auth-guard";
 import { revalidateTag } from "next/cache";
 import type { Prisma } from "@prisma/client";
 
@@ -15,6 +16,8 @@ export async function updateSiteSettings(data: {
   footerConfig?: Prisma.InputJsonValue;
   navConfig?: Prisma.InputJsonValue;
 }) {
+  await requireAdmin();
+
   await db.siteSettings.upsert({
     where: { id: "default" },
     update: data,

@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { requireAdmin } from "@/lib/auth-guard";
 import { revalidateTag } from "next/cache";
 import type { ContentBlockType } from "@prisma/client";
 
@@ -9,6 +10,8 @@ export async function updateContentBlock(data: {
   content: unknown;
   type?: ContentBlockType;
 }) {
+  await requireAdmin();
+
   await db.contentBlock.upsert({
     where: { key: data.key },
     update: { content: data.content as object },
@@ -24,6 +27,8 @@ export async function updateContentBlock(data: {
 }
 
 export async function deleteContentBlock(key: string) {
+  await requireAdmin();
+
   await db.contentBlock.delete({ where: { key } });
   revalidateTag("content");
   return { success: true };

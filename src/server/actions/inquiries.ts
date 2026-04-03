@@ -44,3 +44,10 @@ export async function submitInquiry(formData: FormData) {
 
   return { success: true };
 }
+
+export async function markInquiryRead(id: string) {
+  const { requireAdmin } = await import("@/lib/auth-guard");
+  await requireAdmin();
+  await db.inquiry.update({ where: { id }, data: { read: true } });
+  revalidateTag("inquiries");
+}
