@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { createProject, updateProject } from "@/server/actions/portfolio";
+import { TiptapEditor } from "@/components/admin/tiptap-editor";
+
+const EMPTY_DOC = { type: "doc", content: [{ type: "paragraph" }] };
 
 type ProjectFormProps = {
   project?: {
@@ -23,9 +26,7 @@ export function ProjectForm({ project }: ProjectFormProps) {
   const [slug, setSlug] = useState(project?.slug ?? "");
   const [client, setClient] = useState(project?.client ?? "");
   const [shortDescription, setShortDescription] = useState(project?.shortDescription ?? "");
-  const [description, setDescription] = useState(
-    project?.description ? JSON.stringify(project.description, null, 2) : '{"type":"doc","content":[]}'
-  );
+  const [description, setDescription] = useState<unknown>(project?.description ?? EMPTY_DOC);
   const [coverImage, setCoverImage] = useState(project?.coverImage ?? "");
   const [techStack, setTechStack] = useState(project?.techStack.join(", ") ?? "");
   const [published, setPublished] = useState(project?.published ?? false);
@@ -45,17 +46,16 @@ export function ProjectForm({ project }: ProjectFormProps) {
     setError("");
     setSaving(true);
     try {
-      const parsed = JSON.parse(description);
       const data = {
         title, slug, client: client || undefined, shortDescription,
-        description: parsed, coverImage: coverImage || "/images/placeholder-project.jpg",
+        description, coverImage: coverImage || "/images/placeholder-project.jpg",
         techStack: techStack.split(",").map((s) => s.trim()).filter(Boolean),
         published, featured,
       };
       if (project) { await updateProject(project.id, data); }
       else { await createProject(data); }
     } catch (err) {
-      setError(err instanceof SyntaxError ? "Invalid JSON" : String(err));
+      setError(String(err));
       setSaving(false);
     }
   }
@@ -90,8 +90,8 @@ export function ProjectForm({ project }: ProjectFormProps) {
         <input type="text" value={techStack} onChange={(e) => setTechStack(e.target.value)} className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-[var(--foreground)]">Description (Tiptap JSON)</label>
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={8} className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 font-mono text-xs text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]" />
+        <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">Description</label>
+        <TiptapEditor value={description} onChange={setDescription} placeholder="Describe the project..." minHeight="280px" />
       </div>
       <div className="flex items-center gap-6">
         <label className="flex items-center gap-2 text-sm text-[var(--foreground)]">

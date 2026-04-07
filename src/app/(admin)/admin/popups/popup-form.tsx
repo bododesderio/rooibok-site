@@ -1,7 +1,10 @@
 "use client";
 import { useState } from "react";
 import { createPopup, updatePopup } from "@/server/actions/popups";
+import { TiptapEditor } from "@/components/admin/tiptap-editor";
 import type { PopupType, PopupTrigger, PopupFrequency } from "@prisma/client";
+
+const EMPTY_DOC = { type: "doc", content: [{ type: "paragraph" }] };
 
 type Props = {
   popup?: {
@@ -30,7 +33,7 @@ const POPUP_FREQUENCIES: PopupFrequency[] = ["ONCE_PER_SESSION", "ONCE_EVER", "A
 export function PopupForm({ popup }: Props) {
   const [name, setName] = useState(popup?.name ?? "");
   const [title, setTitle] = useState(popup?.title ?? "");
-  const [content, setContent] = useState(popup?.content ? JSON.stringify(popup.content, null, 2) : '{"type":"doc","content":[]}');
+  const [content, setContent] = useState<unknown>(popup?.content ?? EMPTY_DOC);
   const [type, setType] = useState<PopupType>(popup?.type ?? "MODAL");
   const [trigger, setTrigger] = useState<PopupTrigger>(popup?.trigger ?? "ON_LOAD");
   const [delay, setDelay] = useState(popup?.delay ?? 0);
@@ -52,7 +55,7 @@ export function PopupForm({ popup }: Props) {
       const data = {
         name,
         title: title || undefined,
-        content: JSON.parse(content),
+        content,
         type,
         trigger,
         delay: delay || undefined,
@@ -114,7 +117,7 @@ export function PopupForm({ popup }: Props) {
         <div><label className={labelCls}>CTA Link</label><input type="text" value={ctaLink} onChange={e => setCtaLink(e.target.value)} className={inputCls} /></div>
       </div>
 
-      <div><label className={labelCls}>Content (Tiptap JSON)</label><textarea value={content} onChange={e => setContent(e.target.value)} rows={8} className={`${inputCls} font-mono text-xs`} /></div>
+      <div><label className={labelCls}>Content</label><div className="mt-1"><TiptapEditor value={content} onChange={setContent} placeholder="Popup body..." minHeight="200px" /></div></div>
 
       <label className="flex items-center gap-2 text-sm text-[var(--foreground)]"><input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} className="rounded border-[var(--border)]" /> Active</label>
 

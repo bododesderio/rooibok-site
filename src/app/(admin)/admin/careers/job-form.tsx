@@ -1,6 +1,9 @@
 "use client";
 import { useState } from "react";
 import { createJob, updateJob } from "@/server/actions/careers";
+import { TiptapEditor } from "@/components/admin/tiptap-editor";
+
+const EMPTY_DOC = { type: "doc", content: [{ type: "paragraph" }] };
 
 type Props = { job?: { id: string; title: string; slug: string; department: string; location: string; type: "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP"; shortDescription: string; description: unknown; salaryMin: number | null; salaryMax: number | null; salaryCurrency: string | null; published: boolean } };
 
@@ -11,7 +14,7 @@ export function JobForm({ job }: Props) {
   const [location, setLocation] = useState(job?.location ?? "");
   const [type, setType] = useState(job?.type ?? "FULL_TIME");
   const [shortDescription, setShortDescription] = useState(job?.shortDescription ?? "");
-  const [description, setDescription] = useState(job?.description ? JSON.stringify(job.description, null, 2) : '{"type":"doc","content":[]}');
+  const [description, setDescription] = useState<unknown>(job?.description ?? EMPTY_DOC);
   const [salaryMin, setSalaryMin] = useState(job?.salaryMin ?? "");
   const [salaryMax, setSalaryMax] = useState(job?.salaryMax ?? "");
   const [published, setPublished] = useState(job?.published ?? false);
@@ -21,7 +24,7 @@ export function JobForm({ job }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); setError(""); setSaving(true);
     try {
-      const data = { title, slug, department, location, type: type as "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP", shortDescription, description: JSON.parse(description), salaryMin: salaryMin ? Number(salaryMin) : undefined, salaryMax: salaryMax ? Number(salaryMax) : undefined, published };
+      const data = { title, slug, department, location, type: type as "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP", shortDescription, description, salaryMin: salaryMin ? Number(salaryMin) : undefined, salaryMax: salaryMax ? Number(salaryMax) : undefined, published };
       if (job) await updateJob(job.id, data); else await createJob(data);
     } catch (err) { setError(String(err)); setSaving(false); }
   }
@@ -45,7 +48,7 @@ export function JobForm({ job }: Props) {
         <div><label className="block text-sm font-medium text-[var(--foreground)]">Salary Min</label><input type="number" value={salaryMin} onChange={e => setSalaryMin(e.target.value)} className={inputClass} /></div>
         <div><label className="block text-sm font-medium text-[var(--foreground)]">Salary Max</label><input type="number" value={salaryMax} onChange={e => setSalaryMax(e.target.value)} className={inputClass} /></div>
       </div>
-      <div><label className="block text-sm font-medium text-[var(--foreground)]">Description (Tiptap JSON)</label><textarea value={description} onChange={e => setDescription(e.target.value)} rows={8} className={"mt-1 block w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 font-mono text-xs text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"} /></div>
+      <div><label className="mb-1 block text-sm font-medium text-[var(--foreground)]">Description</label><TiptapEditor value={description} onChange={setDescription} placeholder="Describe the role..." minHeight="280px" /></div>
       <label className="flex items-center gap-2 text-sm text-[var(--foreground)]"><input type="checkbox" checked={published} onChange={e => setPublished(e.target.checked)} className="rounded border-[var(--border)]" /> Published</label>
       <button type="submit" disabled={saving} className="rounded-lg bg-[var(--accent)] px-6 py-2.5 text-sm font-medium text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)] disabled:opacity-50">{saving ? "Saving..." : job ? "Update Job" : "Create Job"}</button>
     </form>

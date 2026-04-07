@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { createPost, updatePost } from "@/server/actions/blog";
+import { TiptapEditor } from "@/components/admin/tiptap-editor";
+
+const EMPTY_DOC = { type: "doc", content: [{ type: "paragraph" }] };
 
 type Category = { id: string; name: string };
 
@@ -25,9 +28,7 @@ export function PostForm({ categories, post }: PostFormProps) {
   const [title, setTitle] = useState(post?.title ?? "");
   const [slug, setSlug] = useState(post?.slug ?? "");
   const [excerpt, setExcerpt] = useState(post?.excerpt ?? "");
-  const [content, setContent] = useState(
-    post?.content ? JSON.stringify(post.content, null, 2) : '{"type":"doc","content":[]}'
-  );
+  const [content, setContent] = useState<unknown>(post?.content ?? EMPTY_DOC);
   const [coverImage, setCoverImage] = useState(post?.coverImage ?? "");
   const [categoryId, setCategoryId] = useState(post?.categoryId ?? "");
   const [readTime, setReadTime] = useState(post?.readTime ?? 3);
@@ -54,12 +55,11 @@ export function PostForm({ categories, post }: PostFormProps) {
     setSaving(true);
 
     try {
-      const parsed = JSON.parse(content);
       const data = {
         title,
         slug,
         excerpt: excerpt || undefined,
-        content: parsed,
+        content,
         coverImage: coverImage || undefined,
         categoryId: categoryId || undefined,
         readTime: readTime || undefined,
@@ -73,7 +73,7 @@ export function PostForm({ categories, post }: PostFormProps) {
         await createPost(data);
       }
     } catch (err) {
-      setError(err instanceof SyntaxError ? "Invalid JSON content" : String(err));
+      setError(String(err));
       setSaving(false);
     }
   }
@@ -157,15 +157,8 @@ export function PostForm({ categories, post }: PostFormProps) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[var(--foreground)]">
-          Content (Tiptap JSON)
-        </label>
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={10}
-          className="mt-1 block w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 font-mono text-xs text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
-        />
+        <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">Content</label>
+        <TiptapEditor value={content} onChange={setContent} placeholder="Write your post..." minHeight="320px" />
       </div>
 
       <div className="flex items-center gap-6">
